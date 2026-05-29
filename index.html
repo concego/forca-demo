@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Forca Inclusivo - Versão Demo</title>
+    <style>
+        :root {
+            --bg-principal: #121212;
+            --bg-painel: #1e1e1e;
+            --txt-principal: #ffffff;
+            --txt-secundario: #b3b3b3;
+            --foco: #00e5ff;
+            --alerta: #ffb74d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-principal);
+            color: var(--txt-principal);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .escondido { 
+            display: none !important; 
+        }
+
+        /* Botões */
+        .btn-principal {
+            background-color: #2a2a2a;
+            color: var(--txt-principal);
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            border: 2px solid #444;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        .btn-principal:hover {
+            background-color: #3a3a3a;
+        }
+
+        .btn-principal:focus-visible {
+            outline: 3px solid var(--foco);
+            outline-offset: 2px;
+        }
+
+        /* Accordion Ajuda */
+        .painel-ajuda {
+            background-color: var(--bg-painel);
+            padding: 20px;
+            border-radius: 0 0 12px 12px;
+            text-align: left;
+            border: 1px solid #333;
+            border-top: none;
+            width: 100%;
+        }
+
+        .btn-accordion {
+            width: 100%;
+            text-align: left;
+            background-color: #2a2a2a;
+            color: white;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: 1px solid #333;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn-accordion[aria-expanded="true"] {
+            border-radius: 12px 12px 0 0;
+            border-bottom: 1px solid #444;
+        }
+
+        /* Elementos do Jogo */
+        .placar {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--alerta);
+            margin-bottom: 10px;
+        }
+
+        .painel-status {
+            background-color: var(--bg-painel);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 14px;
+            margin: 15px 0;
+            font-size: 1.1rem;
+            color: var(--alerta);
+            width: 100%;
+        }
+
+        .painel-status:focus {
+            outline: 2px solid var(--foco);
+        }
+
+        .palavra-display {
+            font-size: 3rem;
+            letter-spacing: 12px;
+            margin: 20px 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: var(--foco);
+            word-break: break-all;
+        }
+
+        .campo-entrada {
+            background-color: var(--bg-painel);
+            color: var(--txt-principal);
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1.8rem;
+            text-align: center;
+            width: 90px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .campo-entrada:focus {
+            outline: 3px solid var(--foco);
+            border-color: transparent;
+        }
+
+        .historico-letras {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            color: var(--txt-secundario);
+            font-style: italic;
+        }
+
+        svg {
+            background-color: var(--bg-painel);
+            border-radius: 12px;
+            border: 1px solid #222;
+            margin: 10px 0;
+        }
+
+        .parte-boneco { opacity: 0; transition: opacity 0.3s; }
+        .visivel { opacity: 1; }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            font-size: 0.9rem;
+            color: var(--txt-secundario);
+            border-top: 1px solid #222;
+            width: 100%;
+        }
+        footer a { color: var(--foco); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="tela-inicial" class="container">
+        <h1>Jogo da Forca <span style="color: var(--foco); font-size: 1.2rem; display:block;">[Versão Demo]</span></h1>
+        
+        <svg width="140" height="150" viewBox="0 0 100 110" aria-hidden="true">
+            <line x1="10" y1="100" x2="50" y2="100" stroke="white" stroke-width="4"/>
+            <line x1="30" y1="100" x2="30" y2="10" stroke="white" stroke-width="4"/>
+            <line x1="30" y1="10" x2="70" y2="10" stroke="white" stroke-width="4"/>
+            <line x1="70" y1="10" x2="70" y2="25" stroke="white" stroke-width="2"/>
+            <circle cx="70" cy="35" r="10" fill="none" stroke="white" stroke-width="2"/>
+            <line x1="70" y1="45" x2="70" y2="75" stroke="white" stroke-width="2"/>
+        </svg>
+
+        <div style="width:100%; margin: 15px 0;">
+            <button class="btn-principal" onclick="iniciarJogo()" style="width:80%;">Jogar Demo</button>
+            
+            <button class="btn-accordion" id="btn-ajuda" aria-expanded="false" aria-controls="painel-ajuda" onclick="alternarAjuda()">
+                <span>Como Funciona</span>
+                <span id="seta-ajuda">▼</span>
+            </button>
+            
+            <div id="painel-ajuda" class="painel-ajuda escondido" role="region" aria-labelledby="btn-ajuda">
+                <p><strong>Palpites:</strong> Digite uma letra e aperte Enter.</p>
+                <p><strong>Acentos:</strong> São ignorados automaticamente. Digitar "A" valida "Ã".</p>
+                <p><strong>Sons (Web Audio):</strong> Bipes agudos confirmam acertos, bipes graves indicam erros na forca.</p>
+                <p><strong>Objetivo da Demo:</strong> Atinja 500 pontos (5 palavras) sem ser enforcado.</p>
+            </div>
+        </div>
+
+        <footer>
+            Desenvolvido por Anderson Carvalho &bull; Contato: <a href="mailto:euconcego@gmail.com">euconcego@gmail.com</a>
+        </footer>
+    </div>
+
+    <div id="tela-jogo" class="container escondido">
+        
+        <div id="painel-placar" class="placar">Pontuação: 0 / 500</div>
+
+        <svg width="160" height="170" viewBox="0 0 100 110" aria-hidden="true">
+            <line x1="10" y1="100" x2="50" y2="100" stroke="white" stroke-width="4"/>
+            <line x1="30" y1="100" x2="30" y2="10" stroke="white" stroke-width="4"/>
+            <line x1="30" y1="10" x2="70" y2="10" stroke="white" stroke-width="4"/>
+            <line x1="70" y1="10" x2="70" y2="25" stroke="white" stroke-width="2"/>
+            <circle id="p-1" class="parte-boneco" cx="70" cy="35" r="10" fill="none" stroke="white" stroke-width="2"/>
+            <line id="p-2" class="parte-boneco" x1="70" y1="45" x2="70" y2="75" stroke="white" stroke-width="2"/>
+            <line id="p-3" class="parte-boneco" x1="70" y1="55" x2="55" y2="45" stroke="white" stroke-width="2"/>
+            <line id="p-4" class="parte-boneco" x1="70" y1="55" x2="85" y2="45" stroke="white" stroke-width="2"/>
+            <line id="p-5" class="parte-boneco" x1="70" y1="75" x2="55" y2="90" stroke="white" stroke-width="2"/>
+            <line id="p-6" class="parte-boneco" x1="70" y1="75" x2="85" y2="90" stroke="white" stroke-width="2"/>
+        </svg>
+
+        <div id="status-jogo" class="painel-status" aria-live="polite" role="status"></div>
+
+        <div id="palavra-display" class="palavra-display"></div>
+
+        <div id="container-entrada" style="margin: 15px 0; width:100%;">
+            <label for="entrada-letra" style="display:block; margin-bottom: 8px; font-weight: bold;">Digite uma letra:</label>
+            <input type="text" id="entrada-letra" class="campo-entrada" maxlength="1" autocomplete="off">
+            
+            <div id="letras-usadas" class="historico-letras">Tentadas: nenhuma</div>
+        </div>
+
+        <button class="btn-principal escondido" id="btn-reiniciar" onclick="reiniciarJogoTotal()">Jogar Novamente</button>
+    </div>
+
+</div>
+
+<script>
+    const bancoPalavras = ["FORCA", "INCLUSAO", "INTERATIVO", "DESIGN", "AUTONOMIA", "CODIGO", "SISTEMA", "COMPUTADOR", "CELULAR", "DESENVOLVEDOR", "ACESSIBILIDADE", "TECNOLOGIA"];
+    const partesNome = ["", "Cabeça", "Tronco", "Braço esquerdo", "Braço direito", "Perna esquerda", "Boneco completo"];
+
+    let palavraSecreta = "";
+    let letrasTentadas = [];
+    let erros = 0;
+    let pontuacao = 0;
+    let jogoAtActive = false;
+    let audioCtx = null;
+
+    function alternarAjuda() {
+        const painel = document.getElementById("painel-ajuda");
+        const botao = document.getElementById("btn-ajuda");
+        const seta = document.getElementById("seta-ajuda");
+        
+        const expandido = botao.getAttribute("aria-expanded") === "true";
+        
+        botao.setAttribute("aria-expanded", !expandido);
+        painel.classList.toggle("escondido");
+        seta.textContent = expandido ? "▼" : "▲";
+    }
+
+    function iniciarJogo() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.getElementById("tela-inicial").classList.add("escondido");
+        document.getElementById("tela-jogo").classList.remove("escondido");
+        
+        document.getElementById("entrada-letra").addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                processarPalpite(this.value.toUpperCase().trim());
+                this.value = "";
+            }
+        });
+
+        pontuacao = 0;
+        proximaPalavra();
+    }
+
+    function playBeep(freq, type, duration, startTime) {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(freq, startTime);
+        osc.type = type;
+        gain.gain.setValueAtTime(0.1, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+    }
+
+    function somEntradaInvalida() { playBeep(110, 'sawtooth', 0.2, audioCtx.currentTime); }
+    
+    function tocarSequenciaPalavra() {
+        let tempoAcumulado = audioCtx.currentTime;
+        const palavraSemAcento = palavraSecreta.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        for (let letra of palavraSemAcento) {
+            playBeep(letrasTentadas.includes(letra) ? 880 : 440, 'sine', letrasTentadas.includes(letra) ? 0.15 : 0.04, tempoAcumulado);
+            tempoAcumulado += 0.15;
+        }
+    }
+
+    function tocarSequenciaErros() {
+        let tempoAcumulado = audioCtx.currentTime;
+        for (let i = 1; i <= erros; i++) {
+            playBeep(140 + (i * 85), 'triangle', 0.25, tempoAcumulado);
+            tempoAcumulado += 0.3;
+        }
+    }
+
+    function somVitoria() {
+        let tempo = audioCtx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => playBeep(freq, 'sine', 0.3, tempo + (i * 0.1)));
+    }
+
+    function somGameOver() {
+        let tempo = audioCtx.currentTime;
+        [392.00, 311.13, 246.94].forEach((freq, i) => playBeep(freq, 'sawtooth', 0.4, tempo + (i * 0.2)));
+    }
+
+    function proximaPalavra() {
+        erros = 0;
+        letrasTentadas = [];
+        jogoAtActive = true;
+        
+        document.getElementById("btn-reiniciar").classList.add("escondido");
+        document.getElementById("container-entrada").classList.remove("escondido");
+        document.getElementById("painel-placar").textContent = `Pontuação: ${pontuacao} / 500`;
+        document.getElementById("letras-usadas").textContent = "Tentadas: nenhuma";
+        
+        for(let i=1; i<=6; i++) document.getElementById(`p-${i}`).classList.remove("visivel");
+
+        palavraSecreta = bancoPalavras[Math.floor(Math.random() * bancoPalavras.length)];
+        const exibicao = atualizarExibicaoPalavra();
+        
+        atualizarStatusTela(`Nova palavra, ${palavraSecreta.length} letras: ${exibicao}`);
+        tocarSequenciaPalavra();
+
+        setTimeout(() => document.getElementById("entrada-letra").focus(), 150);
+    }
+
+    function atualizarExibicaoPalavra() {
+        let exibicao = "";
+        const palavraSemAcento = palavraSecreta.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        for (let i = 0; i < palavraSecreta.length; i++) {
+            exibicao += letrasTentadas.includes(palavraSemAcento[i]) ? palavraSecreta[i] : ".";
+        }
+        document.getElementById("palavra-display").textContent = exibicao;
+        return exibicao;
+    }
+
+    function atualizarStatusTela(texto) {
+        const elementoStatus = document.getElementById("status-jogo");
+        elementoStatus.setAttribute("tabindex", "-1"); 
+        elementoStatus.textContent = texto;
+        elementoStatus.focus();
+    }
+
+    function processarPalpite(letra) {
+        if (!jogoAtActive) return;
+
+        if (!letra || letra.length !== 1 || letra < "A" || letra > "Z") {
+            somEntradaInvalida();
+            atualizarStatusTela("Inválido. Apenas A a Z.");
+            devolverFocoInput();
+            return;
+        }
+
+        if (letrasTentadas.includes(letra)) {
+            somEntradaInvalida();
+            atualizarStatusTela(`Repetida. ${letra} já foi.`);
+            devolverFocoInput();
+            return;
+        }
+
+        letrasTentadas.push(letra);
+        document.getElementById("letras-usadas").textContent = `Tentadas: ${letrasTentadas.join(", ")}`;
+
+        const palavraSemAcento = palavraSecreta.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const estadoAtual = atualizarExibicaoPalavra();
+
+        if (palavraSemAcento.includes(letra)) {
+            if (!estadoAtual.includes(".")) {
+                jogoAtActive = false; 
+                pontuacao += 100;
+                somVitoria();
+                
+                // CONDICIONAL DE VITÓRIA DA PARTIDA (500 PONTOS)
+                if (pontuacao >= 500) {
+                    atualizarStatusTela(`Certo! Fim da Demo. Vitória total! Você atingiu ${pontuacao} pontos.`);
+                    finalizarJogoTotal();
+                } else {
+                    atualizarStatusTela(`Certo! +100 pontos. Próxima palavra.`);
+                    setTimeout(proximaPalavra, 1800);
+                }
+            } else {
+                atualizarStatusTela(`Certo! Palavra: ${estadoAtual}`);
+                tocarSequenciaPalavra();
+                devolverFocoInput();
+            }
+        } else {
+            erros++;
+            let restam = 6 - erros;
+            if (erros <= 6) document.getElementById(`p-${erros}`).classList.add("visivel");
+
+            if (erros === 6) {
+                jogoAtActive = false; 
+                document.getElementById("palavra-display").textContent = palavraSecreta;
+                atualizarStatusTela(`Erro. Boneco completo. Enforcado! Fim de jogo. Pontuação final: ${pontuacao}. Palavra: ${palavraSecreta}`);
+                somGameOver();
+                finalizarJogoTotal();
+            } else {
+                atualizarStatusTela(`Erro. ${partesNome[erros]} desenhada. Restam ${restam}.`);
+                tocarSequenciaErros();
+                devolverFocoInput();
+            }
+        }
+    }
+
+    function devolverFocoInput() {
+        setTimeout(() => { if (jogoAtActive) document.getElementById("entrada-letra").focus(); }, 750);
+    }
+
+    function finalizarJogoTotal() {
+        document.getElementById("container-entrada").classList.add("escondido");
+        const btnReset = document.getElementById("btn-reiniciar");
+        btnReset.classList.remove("escondido");
+        setTimeout(() => btnReset.focus(), 200);
+    }
+
+    function reiniciarJogoTotal() {
+        pontuacao = 0;
+        proximaPalavra();
+    }
+</script>
+
+</body>
+</html>
